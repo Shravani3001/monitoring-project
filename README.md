@@ -75,6 +75,7 @@ This simulates a real application server. It runs:
 Node Exporter: So that Prometheus can scrape system-level metrics like CPU, RAM, disk, etc.
 
 - **How it works together:**
+
 Node Exporter runs on both servers and exposes system metrics on port 9100.
 Prometheus is configured to pull (scrape) metrics from both servers.
 Grafana connects to Prometheus and shows charts, graphs, and dashboards.
@@ -87,49 +88,45 @@ You view the dashboards from your local browser via the monitoring server’s pu
 ```bash
 git clone https://github.com/Shravani3001/monitoring-project.git
 cd monitoring-project
-✅ 2. Generate SSH Key Pair
-bash
-Copy
-Edit
-ssh-keygen -t rsa -b 4096 -f monitoring-key
-This generates monitoring-key and monitoring-key.pub
-Use the public key in Terraform.
+```
 
-✅ 3. Deploy Infrastructure
-bash
-Copy
-Edit
+### ✅ 2. Generate SSH Key Pair
+```bash
+ssh-keygen -t rsa -b 4096 -f monitoring-key
+```
+
+This generates monitoring-key and monitoring-key.pub
+
+### ✅ 3. Deploy Infrastructure
+```bash
 terraform init
 terraform apply
+```
+
 Note the IP addresses from the output.
 
-✅ 4. SSH into Monitoring Server
-bash
-Copy
-Edit
+### ✅ 4. SSH into Monitoring Server
+```bash
 ssh -i ./monitoring-key ubuntu@<monitoring_server_public_ip>
-✅ 5. Install Prometheus, Grafana, and Node Exporter
+```
+
+### ✅ 5. Install Prometheus, Grafana, and Node Exporter
 - **1. Create a dedicated Prometheus user**
-bash
-Copy
-Edit
+```bash
 sudo useradd --no-create-home --shell /bin/false prometheus
+```
 - **2. Create directories for Prometheus**
-bash
-Copy
-Edit
+```bash
 sudo mkdir /etc/prometheus
 sudo mkdir /var/lib/prometheus
+```
 - **3. Download Prometheus**
-bash
-Copy
-Edit
+```bash
 cd /tmp
 curl -LO https://github.com/prometheus/prometheus/releases/download/v2.51.2/prometheus-2.51.2.linux-amd64.tar.gz
+```
 - **4. Extract and move binaries**
-bash
-Copy
-Edit
+```bash
 tar xvf prometheus-2.51.2.linux-amd64.tar.gz
 cd prometheus-2.51.2.linux-amd64
 
@@ -139,24 +136,21 @@ sudo cp promtool /usr/local/bin/
 sudo cp -r consoles /etc/prometheus
 sudo cp -r console_libraries /etc/prometheus
 sudo cp prometheus.yml /etc/prometheus
+```
 - **5. Set permissions**
-bash
-Copy
-Edit
+```bash
 sudo chown -R prometheus:prometheus /etc/prometheus
 sudo chown prometheus:prometheus /usr/local/bin/prometheus
 sudo chown prometheus:prometheus /usr/local/bin/promtool
 sudo chown -R prometheus:prometheus /var/lib/prometheus
+```
 - **6. Create systemd service for Prometheus**
-bash
-Copy
-Edit
+```bash
 sudo nano /etc/systemd/system/prometheus.service
+```
 Paste this in:
 
-ini
-Copy
-Edit
+```bash
 [Unit]
 Description=Prometheus
 Wants=network-online.target
@@ -174,57 +168,49 @@ ExecStart=/usr/local/bin/prometheus \
 
 [Install]
 WantedBy=multi-user.target
+```
 - **7. Start Prometheus**
-bash
-Copy
-Edit
+```bash
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl start prometheus
 sudo systemctl enable prometheus
+```
 - **8. Check if Prometheus is running**
-bash
-Copy
-Edit
+```bash
 sudo systemctl status prometheus
+```
 If status is active (running) ✅, open your browser and check if Prometheus is installed, running, and reachable:
-
-cpp
-Copy
-Edit
+```bash
 http://<monitoring_server_public_ip>:9090
+```
 
-✅ 6. Install Grafana on the Monitoring Server
+### ✅ 6. Install Grafana on the Monitoring Server
 
 Step 1: Install Grafana (Latest)
-bash
-Copy
-Edit
+```bash
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
 wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install grafana -y
+```
 Step 2: Start and Enable Grafana
-bash
-Copy
-Edit
+```bash
 sudo systemctl start grafana-server
 sudo systemctl enable grafana-server
+```
 Step 3: Check if Grafana is Running
-bash
-Copy
-Edit
+```bash
 sudo systemctl status grafana-server
+```
 You should see active (running).
 
 Step 4: Open Grafana in Browser
 In your browser, go to:
-
-cpp
-Copy
-Edit
+```bash
 http://<monitoring_server_public_ip>:3000
+```
 
 Default Login:
 
@@ -234,36 +220,30 @@ Password: admin
 
 You’ll be prompted to change the password after first login.
 
-✅ 7. Install Node Exporter on Both Instances
+### ✅ 7. Install Node Exporter on Both Instances
 
 Step 1: Install Node Exporter on the Monitoring Server
+
 1.1 Download Node Exporter
-bash
-Copy
-Edit
+```bash
 cd /tmp
 curl -LO https://github.com/prometheus/node_exporter/releases/download/v1.8.0/node_exporter-1.8.0.linux-amd64.tar.gz
+```
 1.2 Extract & Move Binary
-bash
-Copy
-Edit
+```bash
 tar xvf node_exporter-1.8.0.linux-amd64.tar.gz
 sudo cp node_exporter-1.8.0.linux-amd64/node_exporter /usr/local/bin/
+```
 1.3 Create a Node Exporter user
-bash
-Copy
-Edit
+```bash
 sudo useradd -rs /bin/false node_exporter
+```
 1.4 Create a systemd service
-bash
-Copy
-Edit
+```bash
 sudo nano /etc/systemd/system/node_exporter.service
-Paste this:
-
-ini
-Copy
-Edit
+```
+Enter this:
+```bash
 [Unit]
 Description=Node Exporter
 After=network.target
@@ -274,67 +254,54 @@ ExecStart=/usr/local/bin/node_exporter
 
 [Install]
 WantedBy=default.target
+```
 1.5 Start and Enable Node Exporter
-bash
-Copy
-Edit
+```bash
 sudo systemctl daemon-reload
 sudo systemctl start node_exporter
 sudo systemctl enable node_exporter
+```
 1.6 Verify it’s working
 Run:
-
-bash
-Copy
-Edit
+```bash
 curl http://localhost:9100/metrics
+```
 ✅ If you see a long list of metrics — it’s working!
 
 Also test from browser (optional):
-
-arduino
-Copy
-Edit
+```bash
 http://<monitoring_server_public_ip>:9100/metrics
-
+```
 Step 2: Install Node Exporter on the App Server
 
 2.1: SSH into the App Server
+
 Use the app server’s public IP from your Terraform output:
 
-bash
-Copy
-Edit
+```bash
 ssh -i ./monitoring-key ubuntu@<app_server_public_ip>
-
+```
 2.2: Install Node Exporter on App Server
 - **Download Node Exporter**
-bash
-Copy
-Edit
+```bash
 cd /tmp
 curl -LO https://github.com/prometheus/node_exporter/releases/download/v1.8.0/node_exporter-1.8.0.linux-amd64.tar.gz
+```
 - **Extract and move binary**
-bash
-Copy
-Edit
+```bash
 tar xvf node_exporter-1.8.0.linux-amd64.tar.gz
 sudo cp node_exporter-1.8.0.linux-amd64/node_exporter /usr/local/bin/
+```
 - **Create Node Exporter user**
-bash
-Copy
-Edit
+```bash
 sudo useradd -rs /bin/false node_exporter
+```
 - **Create systemd service**
-bash
-Copy
-Edit
+```bash
 sudo nano /etc/systemd/system/node_exporter.service
-Paste this into the file:
-
-ini
-Copy
-Edit
+```
+Enter this into the file:
+```bash
 [Unit]
 Description=Node Exporter
 After=network.target
@@ -345,34 +312,30 @@ ExecStart=/usr/local/bin/node_exporter
 
 [Install]
 WantedBy=default.target
+```
 Save and exit (Ctrl+O, Enter, Ctrl+X).
 
 - **Start and enable Node Exporter**
-bash
-Copy
-Edit
+```bash
 sudo systemctl daemon-reload
 sudo systemctl start node_exporter
 sudo systemctl enable node_exporter
+```
 - **Confirm it's running**
-bash
-Copy
-Edit
+```bash
 curl http://localhost:9100/metrics
+```
 You should see a long list of metrics ✅
 
-✅ 8. Connect App Server to Prometheus
+### ✅ 8. Connect App Server to Prometheus
 
 - **Go back to Monitoring Server and edit prometheus.yml**
-bash
-Copy
-Edit
+```bash
 sudo nano /etc/prometheus/prometheus.yml
+```
 Find the existing scrape_configs block (for Prometheus itself), and add another job below it like this:
 
-yaml
-Copy
-Edit
+```bash
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
@@ -381,32 +344,24 @@ scrape_configs:
   - job_name: 'app-server'
     static_configs:
       - targets: ['10.0.1.12:9100']
+```
 ⬆️ Replace 10.0.1.12 with your actual app server private IP.
 
 - **Restart Prometheus**
-bash
-Copy
-Edit
+```bash
 sudo systemctl restart prometheus
+```
 - **Verify in Browser**
 Go to:
-
-arduino
-Copy
-Edit
+```bash
 http://<monitoring_server_public_ip>:9090/targets
-You should see:
+```
 
-localhost:9090 (up)
-
-10.0.X.X:9100 (up)
-
-If both are UP, your Prometheus is successfully monitoring both servers! 
-
-✅ 9. Visualize Metrics in Grafana
+### ✅ 9. Visualize Metrics in Grafana
 
 - **Add Prometheus as a Data Source in Grafana**
 Open Grafana in your browser:
+
 http://<monitoring_server_public_ip>:3000
 
 Open "Data Sources"
@@ -416,11 +371,9 @@ Click “Add data source”
 Choose “Prometheus” from the list.
 
 In the URL field, enter:
-
-arduino
-Copy
-Edit
+```bash
 http://localhost:9090
+```
 Scroll down and click “Save & Test”
 
 ✅ You should see Data source is working.
@@ -429,11 +382,9 @@ Scroll down and click “Save & Test”
 Open “Import”
 
 In the Import via Grafana.com field, enter this dashboard ID:
-
-yaml
-Copy
-Edit
+```bash
 1860
+```
 This is a very popular Node Exporter dashboard.
 
 Click Load
@@ -444,7 +395,11 @@ Click Import
 
 You’ll now see a full system metrics dashboard!
 
+## Author
 
+**Shravani K**  
+Aspiring DevOps Learner  
+LinkedIn: www.linkedin.com/in/shravani-k-25953828a
 
 
 
